@@ -9,6 +9,7 @@ const cheerio = require('cheerio');
 const utils = require('./utils');
 const { createTracker } = require('./tracker');
 const url = require('url');
+const sleep = require('sleep-promise');
 
 const isOk = response => response.ok() || response.status() === 304;
 
@@ -407,7 +408,7 @@ const processPage = ({
 
 /**
  *
- * @param {{ urls: Array<string>, debug: boolean, loadimages: boolean, skippable: function, browser: any, userAgent: string, withoutjavascript: boolean, viewport: any, puppeteerArgs: Array<string>, cssoOptions: Object, ignoreCSSErrors?: boolean, ignoreJSErrors?: boolean, styletags?: boolean, enableServiceWorkers?: boolean }} options
+ * @param {{ urls: Array<string>, debug: boolean, loadimages: boolean, skippable: function, browser: any, userAgent: string, withoutjavascript: boolean, viewport: any, puppeteerArgs: Array<string>, cssoOptions: Object, ignoreCSSErrors?: boolean, ignoreJSErrors?: boolean, styletags?: boolean, enableServiceWorkers?: boolean, delay: number}} options
  * @return Promise<{ finalCss: string, stylesheetContents: { [key: string]: string } }>
  */
 const minimalcss = async options => {
@@ -416,6 +417,7 @@ const minimalcss = async options => {
   const cssoOptions = options.cssoOptions || {};
   const enableServiceWorkers = options.enableServiceWorkers || false;
   const puppeteerArgs = options.puppeteerArgs || [];
+  const delay_ms = options.delay || 0;
   if (!enableServiceWorkers) {
     puppeteerArgs.push('--enable-features=NetworkService');
   }
@@ -438,6 +440,7 @@ const minimalcss = async options => {
     // Note! This opens one URL at a time synchronous
     for (let i = 0; i < urls.length; i++) {
       const pageUrl = urls[i];
+      await sleep(delay_ms);
       const page = await browser.newPage();
       if (!enableServiceWorkers) {
         await page._client.send('ServiceWorker.disable');
